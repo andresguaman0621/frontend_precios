@@ -22,6 +22,7 @@
         "NSLocationWhenInUseUsageDescription": "Se requiere ubicación para registrar dónde se capturan los precios.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Se requiere ubicación para registrar dónde se capturan los precios.",
         "UIBackgroundModes": [
+          "remote-notification",
           "remote-notification"
         ]
       }
@@ -33,6 +34,11 @@
       "package": "ec.gob.mmqep.toma",
       "versionCode": 1,
       "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "POST_NOTIFICATIONS",
@@ -67,6 +73,12 @@
       "eas": {
         "projectId": "5e2fc6f8-9b0e-44b4-b8f5-75e49823c01b"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/5e2fc6f8-9b0e-44b4-b8f5-75e49823c01b"
     }
   }
 }

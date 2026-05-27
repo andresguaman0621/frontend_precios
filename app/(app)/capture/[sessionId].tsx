@@ -56,7 +56,7 @@ export default function CaptureScreen() {
     numeroSemana: number;
   } | null>(null);
 
-  const { products, capturedCount, totalCount, loading, reload } = useCatalog(
+  const { products, capturedCount, totalCount, loading } = useCatalog(
     sessionId,
     refreshKey,
   );
@@ -259,7 +259,6 @@ export default function CaptureScreen() {
           data={filtered}
           renderItem={renderItem}
           keyExtractor={(item) => `${item.productoId}`}
-          estimatedItemSize={260}
           contentContainerStyle={{ paddingVertical: 8, paddingBottom: 120 }}
         />
       )}

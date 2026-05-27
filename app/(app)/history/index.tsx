@@ -134,7 +134,6 @@ export default function HistoryListScreen() {
           data={items}
           renderItem={renderItem}
           keyExtractor={(item) => `${item.id}`}
-          estimatedItemSize={100}
           contentContainerStyle={{ paddingVertical: 4 }}
           onEndReached={() => {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();

@@ -1,6 +1,0 @@
-{
-  "name": "react-native-worklets",
-  "version": "1.0.0",
-  "description": "Shim that maps react-native-worklets to react-native-worklets-core for nativewind/css-interop compatibility",
-  "main": "index.js"
-}
