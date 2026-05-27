@@ -1,0 +1,91 @@
+appId: ec.gob.mmqep.toma
+---
+# Flujo crítico: captura offline → completar → sync al recuperar red
+# Pre-requisito: backend corriendo, usuario supervisor de pruebas con un mercado asignado
+# Variables (override con --env):
+#   USERNAME: belen.valencia
+#   PASSWORD: ***
+
+- launchApp:
+    clearState: true
+
+- assertVisible: "MMQEP"
+- assertVisible: "Iniciar sesión"
+
+- tapOn: "Usuario"
+- inputText: "${USERNAME}"
+- tapOn: "Contraseña"
+- inputText: "${PASSWORD}"
+- tapOn: "Iniciar sesión"
+
+- assertVisible:
+    text: "Hola"
+    timeout: 15000
+
+# Iniciar nueva toma
+- tapOn: "Iniciar nueva toma"
+- assertVisible: "Iniciar nueva toma"
+- tapOn: "Permitir ubicación"
+- tapOn:
+    text: "Iniciar toma"
+    waitToSettleTimeoutMs: 30000
+
+# Captura: ya en /capture
+- assertVisible:
+    text: "Buscar producto..."
+    timeout: 20000
+
+# Activar modo avión (Maestro requiere root o config previa)
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - runScript: |
+          // En Android emulator con root: `adb shell svc wifi disable && adb shell svc data disable`
+          maestro:cli:airplaneOn
+
+- tapOn:
+    id: "input-p1"
+    optional: true
+
+- swipe:
+    start: 50%, 80%
+    end: 50%, 20%
+
+- inputText: "25.50"
+- tapOn:
+    id: "input-p2"
+    optional: true
+- inputText: "26.00"
+- tapOn:
+    id: "input-p3"
+    optional: true
+- inputText: "25.75"
+
+- waitForAnimationToEnd
+
+# Completar
+- tapOn:
+    text: "Completar Toma"
+- tapOn: "Continuar → GPS"
+- tapOn:
+    text: "Guardar y enviar cuando haya red"
+    waitToSettleTimeoutMs: 10000
+
+# Desactivar modo avión
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - runScript: |
+          maestro:cli:airplaneOff
+
+- waitForAnimationToEnd:
+    timeout: 35000
+
+# Verificar historial
+- tapOn:
+    text: "Historial"
+- assertVisible:
+    text: "COMPLETADA"
+    timeout: 20000
