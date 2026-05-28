@@ -7,6 +7,5 @@ export const haptics = {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {}),
   warning: () =>
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {}),
-  error: () =>
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {}),
+  error: () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {}),
 };

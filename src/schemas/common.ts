@@ -2,11 +2,7 @@ import { z } from "zod";
 
 export type SyncState = "synced" | "pending" | "syncing" | "conflict" | "error";
 
-export type SessionSyncState =
-  | "synced"
-  | "pending_create"
-  | "pending_complete"
-  | "pending_cancel";
+export type SessionSyncState = "synced" | "pending_create" | "pending_complete" | "pending_cancel";
 
 export type SessionEstado = "INICIADA" | "COMPLETADA";
 

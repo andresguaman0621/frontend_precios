@@ -44,8 +44,7 @@ export function calcularNumeroSemanaAnio(date: Date = new Date()): [number, numb
   // Día del año (1-indexed) en TZ local
   const localDate = new Date(Date.UTC(year, month - 1, day));
   const firstDayLocal = new Date(Date.UTC(year, 0, 1));
-  const dayOfYear =
-    Math.floor((localDate.getTime() - firstDayLocal.getTime()) / 86_400_000) + 1;
+  const dayOfYear = Math.floor((localDate.getTime() - firstDayLocal.getTime()) / 86_400_000) + 1;
 
   // Día de la semana del 1 de enero (0 = domingo)
   const jan1 = new Date(Date.UTC(year, 0, 1));

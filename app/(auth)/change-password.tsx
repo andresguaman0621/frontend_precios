@@ -9,14 +9,18 @@ import { ChevronLeft } from "lucide-react-native";
 
 import * as authApi from "@/api/auth";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
+import { PressableScale } from "@/components/ui/PressableScale";
+import { useResponsive } from "@/hooks/useResponsive";
 import { changePasswordSchema, type ChangePasswordFormValues } from "@/schemas/auth";
 import { toast } from "@/stores/toast";
 import { colors } from "@/theme/colors";
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
+  const { isTablet } = useResponsive();
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -60,89 +64,98 @@ export default function ChangePasswordScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-row items-center px-4 py-2 border-b border-gray-200">
-        <Button
-          label="Atrás"
-          variant="ghost"
-          size="sm"
-          fullWidth={false}
-          leftIcon={<ChevronLeft size={16} color={colors.primary} />}
+      <View className="flex-row items-center px-3 py-2.5 border-b border-gray-200">
+        <PressableScale
           onPress={() => router.back()}
-        />
+          className="flex-row items-center gap-1 px-2 py-1.5 -ml-1"
+        >
+          <ChevronLeft size={20} color={colors.primary} />
+          <Text className="text-primary font-medium text-sm">Atrás</Text>
+        </PressableScale>
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         className="flex-1"
       >
         <ScrollView
-          contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
+          contentContainerStyle={{
+            padding: 20,
+            paddingBottom: 100,
+            alignItems: "center",
+          }}
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="text-2xl font-bold text-texto-principal mb-1">
-            Cambiar contraseña
-          </Text>
-          <Text className="text-sm text-texto-secundario mb-6">
-            Usa una contraseña segura. Mínimo 8 caracteres.
-          </Text>
+          <View style={{ width: "100%", maxWidth: isTablet ? 480 : 560 }} className="gap-4">
+            <View>
+              <Text className="text-2xl font-semibold text-texto-principal">
+                Cambiar contraseña
+              </Text>
+              <Text className="text-sm text-texto-secundario mt-1">
+                Usa una contraseña segura. Mínimo 8 caracteres.
+              </Text>
+            </View>
 
-          <View className="gap-4">
-            <Controller
-              control={control}
-              name="old_password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="Contraseña actual"
-                  placeholder="••••••••"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secure
-                  error={errors.old_password?.message}
+            <Card>
+              <View className="gap-4">
+                <Controller
+                  control={control}
+                  name="old_password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Contraseña actual"
+                      placeholder="••••••••"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secure
+                      error={errors.old_password?.message}
+                    />
+                  )}
                 />
-              )}
-            />
 
-            <Controller
-              control={control}
-              name="new_password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View>
-                  <Input
-                    label="Nueva contraseña"
-                    placeholder="••••••••"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    secure
-                    error={errors.new_password?.message}
-                  />
-                  <PasswordStrengthMeter password={value} />
-                </View>
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="confirm_password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="Confirmar nueva contraseña"
-                  placeholder="••••••••"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secure
-                  error={errors.confirm_password?.message}
+                <Controller
+                  control={control}
+                  name="new_password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <View>
+                      <Input
+                        label="Nueva contraseña"
+                        placeholder="••••••••"
+                        value={value}
+                        onChangeText={onChange}
+                        onBlur={onBlur}
+                        secure
+                        error={errors.new_password?.message}
+                      />
+                      <PasswordStrengthMeter password={value} />
+                    </View>
+                  )}
                 />
-              )}
-            />
 
-            <Button
-              label="Guardar"
-              loading={submitting}
-              disabled={!isValid || submitting || !newPasswordValue}
-              onPress={handleSubmit(onSubmit)}
-            />
+                <Controller
+                  control={control}
+                  name="confirm_password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Confirmar nueva contraseña"
+                      placeholder="••••••••"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secure
+                      error={errors.confirm_password?.message}
+                    />
+                  )}
+                />
+
+                <Button
+                  label="Guardar"
+                  loading={submitting}
+                  disabled={!isValid || submitting || !newPasswordValue}
+                  onPress={handleSubmit(onSubmit)}
+                />
+              </View>
+            </Card>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

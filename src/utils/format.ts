@@ -6,7 +6,10 @@ export function formatCurrency(value: number | null | undefined): string {
   return `$${value.toFixed(2)}`;
 }
 
-export function formatDateTime(iso: string | null | undefined, pattern = "dd/MM/yyyy HH:mm"): string {
+export function formatDateTime(
+  iso: string | null | undefined,
+  pattern = "dd/MM/yyyy HH:mm",
+): string {
   if (!iso) return "—";
   try {
     return format(parseISO(iso), pattern, { locale: es });

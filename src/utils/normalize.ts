@@ -1,10 +1,6 @@
 /** Quita acentos y normaliza a minúsculas para búsqueda local. */
 export function normalize(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
 export function matches(haystack: string, needle: string): boolean {

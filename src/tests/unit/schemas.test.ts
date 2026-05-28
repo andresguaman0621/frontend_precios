@@ -1,8 +1,4 @@
-import {
-  changePasswordSchema,
-  evaluatePasswordStrength,
-  loginSchema,
-} from "@/schemas/auth";
+import { changePasswordSchema, evaluatePasswordStrength, loginSchema } from "@/schemas/auth";
 
 describe("loginSchema", () => {
   it("requiere username de al menos 3 chars", () => {

@@ -1,13 +1,7 @@
 import { forwardRef } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  type PressableProps,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Text, View, type PressableProps } from "react-native";
 
-import { haptics } from "@/utils/haptics";
+import { PressableScale } from "./PressableScale";
 
 type Variant = "primary" | "secondary" | "outline" | "danger" | "ghost";
 type Size = "sm" | "md" | "lg";
@@ -22,24 +16,24 @@ interface ButtonProps extends Omit<PressableProps, "children"> {
   fullWidth?: boolean;
 }
 
-const variantClasses: Record<Variant, { bg: string; text: string; border?: string }> = {
-  primary: { bg: "bg-primary active:bg-primary-dark", text: "text-white" },
-  secondary: { bg: "bg-mmqep-azul active:bg-primary-dark", text: "text-white" },
-  outline: { bg: "bg-white border border-primary", text: "text-primary", border: "border" },
-  danger: { bg: "bg-mmqep-rojo active:opacity-90", text: "text-white" },
-  ghost: { bg: "bg-transparent active:bg-gris-fondo", text: "text-primary" },
+const variantClasses: Record<Variant, { bg: string; text: string }> = {
+  primary: { bg: "bg-primary", text: "text-white" },
+  secondary: { bg: "bg-white border border-gray-200", text: "text-texto-principal" },
+  outline: { bg: "bg-white border border-primary", text: "text-primary" },
+  danger: { bg: "bg-danger-500", text: "text-white" },
+  ghost: { bg: "bg-transparent", text: "text-primary" },
 };
 
 const sizeClasses: Record<Size, string> = {
-  sm: "py-2 px-3",
-  md: "py-3 px-5",
-  lg: "py-4 px-6",
+  sm: "py-2 px-3 min-h-[36px]",
+  md: "py-2.5 px-4 min-h-[44px]",
+  lg: "py-3 px-5 min-h-[48px]",
 };
 
 const sizeText: Record<Size, string> = {
   sm: "text-sm",
   md: "text-base",
-  lg: "text-base font-semibold",
+  lg: "text-base",
 };
 
 export const Button = forwardRef<View, ButtonProps>(function Button(
@@ -59,21 +53,21 @@ export const Button = forwardRef<View, ButtonProps>(function Button(
 ) {
   const v = variantClasses[variant];
   const isDisabled = disabled || loading;
+
+  const spinnerColor = variant === "primary" || variant === "danger" ? "#fff" : "#27357d";
+
   return (
-    <Pressable
+    <PressableScale
       ref={ref}
       disabled={isDisabled}
-      onPress={(e) => {
-        haptics.lightTap();
-        onPress?.(e);
-      }}
-      className={`rounded-xl items-center justify-center flex-row gap-2 min-h-[48px] ${v.bg} ${
+      onPress={onPress}
+      className={`rounded-xl items-center justify-center flex-row gap-2 ${v.bg} ${
         sizeClasses[size]
-      } ${fullWidth ? "w-full" : ""} ${isDisabled ? "opacity-60" : ""}`}
+      } ${fullWidth ? "w-full" : ""} ${isDisabled ? "opacity-50" : ""}`}
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "outline" || variant === "ghost" ? "#27357d" : "#fff"} />
+        <ActivityIndicator color={spinnerColor} />
       ) : (
         <>
           {leftIcon}
@@ -81,6 +75,6 @@ export const Button = forwardRef<View, ButtonProps>(function Button(
           {rightIcon}
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 });

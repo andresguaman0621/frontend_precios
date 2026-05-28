@@ -38,18 +38,13 @@ function mapRow(row: MarketRow): Market {
 
 export async function list(): Promise<Market[]> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<MarketRow>(
-    `SELECT * FROM markets_cache ORDER BY nombre ASC;`,
-  );
+  const rows = await db.getAllAsync<MarketRow>(`SELECT * FROM markets_cache ORDER BY nombre ASC;`);
   return rows.map(mapRow);
 }
 
 export async function getById(id: number): Promise<Market | null> {
   const db = await getDatabase();
-  const row = await db.getFirstAsync<MarketRow>(
-    `SELECT * FROM markets_cache WHERE id = ?;`,
-    id,
-  );
+  const row = await db.getFirstAsync<MarketRow>(`SELECT * FROM markets_cache WHERE id = ?;`, id);
   return row ? mapRow(row) : null;
 }
 

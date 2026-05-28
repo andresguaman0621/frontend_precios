@@ -3,7 +3,7 @@
     "name": "MMQEP Toma Precios",
     "slug": "mmqep-toma",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "scheme": "mmqep",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,

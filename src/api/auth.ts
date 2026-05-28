@@ -8,7 +8,10 @@ import type {
   TokenResponse,
 } from "@/schemas/api";
 
-export async function login(payload: { username: string; password: string }): Promise<TokenResponse> {
+export async function login(payload: {
+  username: string;
+  password: string;
+}): Promise<TokenResponse> {
   const body: LoginRequest = { ...payload, scope: "mobile" };
   const res = await api.post<TokenResponse>("/auth/login", body);
   return res.data;

@@ -32,10 +32,9 @@ export async function updateObservation(
   tomaId: number,
   observacion: string,
 ): Promise<PrecioOut> {
-  const res = await api.patch<PrecioOut>(
-    `/sessions/${sessionId}/prices/${tomaId}/observation`,
-    { observacion },
-  );
+  const res = await api.patch<PrecioOut>(`/sessions/${sessionId}/prices/${tomaId}/observation`, {
+    observacion,
+  });
   return res.data;
 }
 
@@ -43,10 +42,7 @@ export async function bulk(
   sessionId: number,
   items: PrecioBulkItem[],
 ): Promise<PrecioBulkResult[]> {
-  const res = await api.post<PrecioBulkResult[]>(
-    `/sessions/${sessionId}/prices/bulk`,
-    items,
-  );
+  const res = await api.post<PrecioBulkResult[]>(`/sessions/${sessionId}/prices/bulk`, items);
   return res.data;
 }
 

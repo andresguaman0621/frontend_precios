@@ -10,10 +10,9 @@ export const priceSchema = z
     observacion: z.string().max(250).default(""),
     confirmado: z.boolean().default(true),
   })
-  .refine(
-    (data) => data.precio_1 != null || data.precio_2 != null || data.precio_3 != null,
-    { message: "Debe ingresar al menos un precio" },
-  );
+  .refine((data) => data.precio_1 != null || data.precio_2 != null || data.precio_3 != null, {
+    message: "Debe ingresar al menos un precio",
+  });
 
 export type PriceFormValues = z.infer<typeof priceSchema>;
 

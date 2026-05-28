@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import {
   CheckCircle2,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react-native";
 
 import { Input } from "@/components/ui/Input";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { colors } from "@/theme/colors";
 import { average, parseDecimal } from "@/utils/decimal";
@@ -36,6 +37,9 @@ export interface VariationDetected {
 
 interface Props {
   product: CatalogProduct;
+  mode?: "full" | "compact";
+  selected?: boolean;
+  onSelect?: () => void;
   onSave: (input: SavePriceInput) => Promise<LocalPrice | null>;
   onVariation: (info: VariationDetected) => void;
 }
@@ -55,17 +59,24 @@ export interface SavePriceInput {
 const DEFAULT_UMBRAL_INF = -32;
 const DEFAULT_UMBRAL_SUP = 34;
 
-function PriceCardImpl({ product, onSave, onVariation }: Props) {
+function PriceCardImpl({
+  product,
+  mode = "full",
+  selected = false,
+  onSelect,
+  onSave,
+  onVariation,
+}: Props) {
   const presentaciones = product.presentaciones;
   const [selectedPresId, setSelectedPresId] = useState(presentaciones[0]?.presentacionId ?? 0);
   const [showObservation, setShowObservation] = useState(false);
 
-  const selected = useMemo(
+  const selectedPres = useMemo(
     () => presentaciones.find((p) => p.presentacionId === selectedPresId) ?? presentaciones[0]!,
     [presentaciones, selectedPresId],
   );
 
-  const existing = selected.currentPrice;
+  const existing = selectedPres.currentPrice;
 
   const [p1, setP1] = useState<string>(existing?.precio1?.toString() ?? "");
   const [p2, setP2] = useState<string>(existing?.precio2?.toString() ?? "");
@@ -76,7 +87,6 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
   const refP2 = useRef<TextInput>(null);
   const refP3 = useRef<TextInput>(null);
 
-  // Cuando cambia la presentación, recargar valores guardados (si los hay)
   useEffect(() => {
     setP1(existing?.precio1?.toString() ?? "");
     setP2(existing?.precio2?.toString() ?? "");
@@ -92,9 +102,9 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
 
   const runSave = async (confirmado = true) => {
     if (avg == null) return;
-    const umbralInf = selected.umbralInferior ?? DEFAULT_UMBRAL_INF;
-    const umbralSup = selected.umbralSuperior ?? DEFAULT_UMBRAL_SUP;
-    const variation = evaluateVariation(avg, selected.lastPrice, umbralInf, umbralSup);
+    const umbralInf = selectedPres.umbralInferior ?? DEFAULT_UMBRAL_INF;
+    const umbralSup = selectedPres.umbralSuperior ?? DEFAULT_UMBRAL_SUP;
+    const variation = evaluateVariation(avg, selectedPres.lastPrice, umbralInf, umbralSup);
 
     if (
       !confirmado &&
@@ -105,11 +115,11 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
       haptics.warning();
       onVariation({
         productoId: product.productoId,
-        presentacionId: selected.presentacionId,
-        presentacionNombre: selected.presentacionNombre,
+        presentacionId: selectedPres.presentacionId,
+        presentacionNombre: selectedPres.presentacionNombre,
         productoNombre: product.productoNombre,
         precioNuevo: avg,
-        precioAnterior: selected.lastPrice,
+        precioAnterior: selectedPres.lastPrice,
         variacion: variation.variacion,
         esAumento: variation.esAumento,
         umbralInferior: umbralInf,
@@ -120,7 +130,7 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
 
     const saved = await onSave({
       productoId: product.productoId,
-      presentacionId: selected.presentacionId,
+      presentacionId: selectedPres.presentacionId,
       precio1: v1,
       precio2: v2,
       precio3: v3,
@@ -153,7 +163,7 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
   };
 
   const syncState = existing?.syncState ?? null;
-  const stateUI = (() => {
+  const stateChip = (() => {
     if (!syncState) return null;
     if (syncState === "synced") {
       return (
@@ -167,7 +177,7 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
       return (
         <View className="flex-row items-center gap-1">
           <CheckCircle2 size={12} color={colors.success} />
-          <Text className="text-xs text-success-700">Guardado local</Text>
+          <Text className="text-xs text-success-700">Guardado</Text>
         </View>
       );
     }
@@ -175,36 +185,67 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
       return (
         <View className="flex-row items-center gap-1">
           <AlertTriangle size={12} color={colors.warning} />
-          <Text className="text-xs text-warning-700">Conflicto pendiente</Text>
+          <Text className="text-xs text-warning-700">Conflicto</Text>
         </View>
       );
     }
     return (
       <View className="flex-row items-center gap-1">
         <XCircle size={12} color={colors.danger} />
-        <Text className="text-xs text-mmqep-rojo">Error de sincronización</Text>
+        <Text className="text-xs text-danger-700">Error</Text>
       </View>
     );
   })();
 
+  // ============ COMPACT MODE ============
+  if (mode === "compact") {
+    const compactBg =
+      syncState === "conflict"
+        ? "bg-warning-50 border-warning-300"
+        : syncState === "error"
+          ? "bg-danger-50 border-danger-300"
+          : "bg-white border-gray-200";
+
+    return (
+      <PressableScale
+        onPress={onSelect}
+        className={`flex-row items-center gap-3 px-3 py-2.5 mx-2 my-1 rounded-xl border min-h-[56px] ${compactBg} ${
+          selected ? "border-primary" : ""
+        }`}
+      >
+        <View className="flex-1">
+          <Text className="text-sm font-medium text-texto-principal" numberOfLines={1}>
+            {product.productoNombre}
+          </Text>
+          <Text className="text-xs text-texto-secundario" numberOfLines={1}>
+            {selectedPres.presentacionNombre}
+          </Text>
+        </View>
+        <View className="items-end">
+          <Text className="text-sm font-semibold text-texto-principal">
+            {existing?.precio != null ? formatCurrency(existing.precio) : "—"}
+          </Text>
+          {stateChip ? <View className="mt-0.5">{stateChip}</View> : null}
+        </View>
+      </PressableScale>
+    );
+  }
+
+  // ============ FULL MODE ============
   const cardTone =
     syncState === "conflict"
       ? "bg-warning-50 border-warning-300"
       : syncState === "error"
         ? "bg-danger-50 border-danger-300"
-        : syncState === "pending" || syncState === "syncing" || syncState === "synced"
-          ? "bg-success-50 border-success-300"
-          : "bg-white border-gray-200";
+        : "bg-white border-gray-200";
 
   return (
-    <View className={`rounded-2xl border p-4 mx-3 my-2 ${cardTone}`}>
-      <Text className="text-base font-semibold text-texto-principal">
-        {product.productoNombre}
-      </Text>
-      <Text className="text-xs text-texto-secundario">{product.productoCategoria}</Text>
+    <View className={`rounded-2xl border p-4 mx-3 my-1.5 ${cardTone}`}>
+      <Text className="text-base font-semibold text-texto-principal">{product.productoNombre}</Text>
+      <Text className="text-xs text-texto-secundario mt-0.5">{product.productoCategoria}</Text>
 
       {presentaciones.length > 1 ? (
-        <View className="mt-2 border border-gray-300 rounded-lg overflow-hidden">
+        <View className="mt-3 border border-gray-200 rounded-xl overflow-hidden">
           <Picker
             selectedValue={selectedPresId}
             onValueChange={(v) => setSelectedPresId(Number(v))}
@@ -221,13 +262,13 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
         </View>
       ) : (
         <Text className="text-xs text-texto-secundario mt-1">
-          Presentación: {selected.presentacionNombre}
+          {selectedPres.presentacionNombre}
         </Text>
       )}
 
-      <View className="flex-row gap-2 mt-3 items-end">
+      <View className="flex-row gap-2 mt-4 items-end">
         <View className="flex-1">
-          <Text className="text-xs text-texto-secundario mb-1">P1</Text>
+          <Text className="text-xs text-texto-secundario mb-1.5 font-medium">P1</Text>
           <TextInput
             ref={refP1}
             value={p1}
@@ -236,14 +277,14 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
             returnKeyType="next"
             placeholder="0.00"
             placeholderTextColor={colors.textoSecundario}
-            className="bg-white rounded-lg border border-gray-300 px-2 py-2 text-2xl text-center"
+            className="bg-white rounded-xl border border-gray-200 px-2 py-2 text-xl text-center font-medium"
             style={{ minHeight: 48 }}
             onSubmitEditing={() => refP2.current?.focus()}
             blurOnSubmit={false}
           />
         </View>
         <View className="flex-1">
-          <Text className="text-xs text-texto-secundario mb-1">P2</Text>
+          <Text className="text-xs text-texto-secundario mb-1.5 font-medium">P2</Text>
           <TextInput
             ref={refP2}
             value={p2}
@@ -252,14 +293,14 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
             returnKeyType="next"
             placeholder="0.00"
             placeholderTextColor={colors.textoSecundario}
-            className="bg-white rounded-lg border border-gray-300 px-2 py-2 text-2xl text-center"
+            className="bg-white rounded-xl border border-gray-200 px-2 py-2 text-xl text-center font-medium"
             style={{ minHeight: 48 }}
             onSubmitEditing={() => refP3.current?.focus()}
             blurOnSubmit={false}
           />
         </View>
         <View className="flex-1">
-          <Text className="text-xs text-texto-secundario mb-1">P3</Text>
+          <Text className="text-xs text-texto-secundario mb-1.5 font-medium">P3</Text>
           <TextInput
             ref={refP3}
             value={p3}
@@ -268,55 +309,59 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
             returnKeyType="done"
             placeholder="0.00"
             placeholderTextColor={colors.textoSecundario}
-            className="bg-white rounded-lg border border-gray-300 px-2 py-2 text-2xl text-center"
+            className="bg-white rounded-xl border border-gray-200 px-2 py-2 text-xl text-center font-medium"
             style={{ minHeight: 48 }}
           />
         </View>
-        <View className="items-center min-w-[72px]">
-          <Text className="text-xs text-texto-secundario mb-1">Promedio</Text>
-          <View className="bg-primary rounded-lg px-2 py-2 min-h-[48px] justify-center min-w-[72px]">
-            <Text className="text-white font-bold text-base text-center" numberOfLines={1}>
+        <View className="items-center min-w-[80px]">
+          <Text className="text-xs text-texto-secundario mb-1.5 font-medium">Promedio</Text>
+          <View className="bg-primary rounded-xl px-2 py-2 min-h-[48px] justify-center min-w-[80px]">
+            <Text className="text-white font-semibold text-base text-center" numberOfLines={1}>
               {avg != null ? formatCurrency(avg) : "—"}
             </Text>
           </View>
         </View>
       </View>
 
-      {selected.lastPrice != null ? (
-        <Text className="text-xs text-texto-secundario mt-2">
-          Precio anterior: {formatCurrency(selected.lastPrice)}
+      {selectedPres.lastPrice != null ? (
+        <Text className="text-xs text-texto-secundario mt-3">
+          Precio anterior: {formatCurrency(selectedPres.lastPrice)}
         </Text>
       ) : null}
 
-      <Pressable
+      <PressableScale
         onPress={() => setShowObservation((v) => !v)}
-        className="flex-row items-center gap-1 mt-3"
+        className="flex-row items-center gap-1 mt-3 py-1"
+        haptic={false}
       >
         {showObservation ? (
           <ChevronUp size={14} color={colors.primary} />
         ) : (
           <ChevronDown size={14} color={colors.primary} />
         )}
-        <Text className="text-xs text-primary">
-          {showObservation ? "Ocultar observación" : "+ Agregar observación"}
+        <Text className="text-xs text-primary font-medium">
+          {showObservation ? "Ocultar observación" : "Agregar observación"}
         </Text>
         {observacion ? (
           <Text className="text-xs text-texto-secundario ml-1">({observacion.length}/250)</Text>
         ) : null}
-      </Pressable>
+      </PressableScale>
+
       {showObservation ? (
-        <Input
-          value={observacion}
-          onChangeText={handleObservation}
-          placeholder="Observación (máx 250)"
-          textArea
-          maxLength={250}
-          helper={`${observacion.length}/250`}
-        />
+        <View className="mt-2">
+          <Input
+            value={observacion}
+            onChangeText={handleObservation}
+            placeholder="Observación (máx 250)"
+            textArea
+            maxLength={250}
+            helper={`${observacion.length}/250`}
+          />
+        </View>
       ) : null}
 
-      <View className="flex-row items-center justify-between mt-2">
-        {stateUI}
+      <View className="flex-row items-center justify-between mt-3">
+        {stateChip ?? <View />}
         {existing?.requirioConfirmacionManual ? (
           <Text className="text-xs text-warning-700 font-medium">⚠ Variación confirmada</Text>
         ) : null}
@@ -326,8 +371,9 @@ function PriceCardImpl({ product, onSave, onVariation }: Props) {
 }
 
 export const PriceCard = memo(PriceCardImpl, (prev, next) => {
-  // Re-render solo si cambia el producto o su currentPrice
   if (prev.product.productoId !== next.product.productoId) return false;
+  if (prev.mode !== next.mode) return false;
+  if (prev.selected !== next.selected) return false;
   const prevPresent = prev.product.presentaciones[0]?.currentPrice;
   const nextPresent = next.product.presentaciones[0]?.currentPrice;
   if (prevPresent?.clientUuid !== nextPresent?.clientUuid) return false;

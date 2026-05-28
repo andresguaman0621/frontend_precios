@@ -161,10 +161,7 @@ export async function upsert(input: PriceUpsertInput): Promise<LocalPrice> {
   return updated;
 }
 
-export async function updateObservation(
-  clientUuid: string,
-  observacion: string,
-): Promise<void> {
+export async function updateObservation(clientUuid: string, observacion: string): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
     `UPDATE prices SET observacion = ?, sync_state = 'pending', sync_attempts = 0, last_error = NULL WHERE client_uuid = ?;`,
@@ -226,10 +223,7 @@ export async function markSynced(clientUuid: string, serverId: number): Promise<
   );
 }
 
-export async function setSyncState(
-  clientUuids: string[],
-  state: SyncState,
-): Promise<void> {
+export async function setSyncState(clientUuids: string[], state: SyncState): Promise<void> {
   if (clientUuids.length === 0) return;
   const db = await getDatabase();
   const placeholders = clientUuids.map(() => "?").join(",");

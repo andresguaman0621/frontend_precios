@@ -9,9 +9,7 @@ interface VersionRow {
 }
 
 async function ensureVersionTable(db: SQLite.SQLiteDatabase): Promise<void> {
-  await db.execAsync(
-    `CREATE TABLE IF NOT EXISTS _schema_version (version INTEGER PRIMARY KEY);`,
-  );
+  await db.execAsync(`CREATE TABLE IF NOT EXISTS _schema_version (version INTEGER PRIMARY KEY);`);
 }
 
 async function getCurrentVersion(db: SQLite.SQLiteDatabase): Promise<number> {
@@ -22,10 +20,7 @@ async function getCurrentVersion(db: SQLite.SQLiteDatabase): Promise<number> {
 }
 
 async function setVersion(db: SQLite.SQLiteDatabase, version: number): Promise<void> {
-  await db.runAsync(
-    `INSERT OR REPLACE INTO _schema_version (version) VALUES (?);`,
-    version,
-  );
+  await db.runAsync(`INSERT OR REPLACE INTO _schema_version (version) VALUES (?);`, version);
 }
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {

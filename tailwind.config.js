@@ -6,6 +6,10 @@ module.exports = {
   ],
   presets: [require("nativewind/preset")],
   theme: {
+    screens: {
+      tablet: "768px",
+      desktop: "1024px",
+    },
     extend: {
       colors: {
         primary: {

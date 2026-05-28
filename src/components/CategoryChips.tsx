@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function CategoryChips({ categories, selected, onSelect }: Props) {
-  const items: Array<{ key: string; label: string; value: string | null }> = [
+  const items: { key: string; label: string; value: string | null }[] = [
     { key: "__all", label: "Todos", value: null },
     ...categories.map((c) => ({ key: c, label: c, value: c })),
   ];
@@ -25,15 +25,11 @@ export function CategoryChips({ categories, selected, onSelect }: Props) {
             key={c.key}
             onPress={() => onSelect(c.value)}
             className={`px-3 py-1.5 rounded-full border ${
-              active
-                ? "bg-primary border-primary"
-                : "bg-white border-gray-300"
+              active ? "bg-primary border-primary" : "bg-white border-gray-300"
             }`}
           >
             <Text
-              className={`text-xs font-medium ${
-                active ? "text-white" : "text-texto-principal"
-              }`}
+              className={`text-xs font-medium ${active ? "text-white" : "text-texto-principal"}`}
             >
               {c.label}
             </Text>

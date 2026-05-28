@@ -1,13 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Location from "expo-location";
 
-export type GpsStatus =
-  | "idle"
-  | "requesting"
-  | "ok"
-  | "low_accuracy"
-  | "denied"
-  | "error";
+export type GpsStatus = "idle" | "requesting" | "ok" | "low_accuracy" | "denied" | "error";
 
 export interface GpsLocation {
   latitude: number;
@@ -42,10 +36,13 @@ export function useGPS(): UseGpsResult {
     }
   }, []);
 
-  useEffect(() => () => {
-    cancelledRef.current = true;
-    stopWatching();
-  }, [stopWatching]);
+  useEffect(
+    () => () => {
+      cancelledRef.current = true;
+      stopWatching();
+    },
+    [stopWatching],
+  );
 
   const reset = useCallback(() => {
     cancelledRef.current = false;

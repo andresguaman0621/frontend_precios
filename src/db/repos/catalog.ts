@@ -58,10 +58,7 @@ export async function getBySession(sessionId: number): Promise<CatalogEntry[]> {
   return rows.map(mapRow);
 }
 
-export async function bulkInsert(
-  sessionId: number,
-  entries: CatalogEntryInput[],
-): Promise<void> {
+export async function bulkInsert(sessionId: number, entries: CatalogEntryInput[]): Promise<void> {
   if (entries.length === 0) return;
   const db = await getDatabase();
   await db.withTransactionAsync(async () => {

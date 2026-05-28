@@ -5,12 +5,7 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 
 import * as authApi from "@/api/auth";
-import {
-  clearTokens,
-  hasStoredTokens,
-  persistTokens,
-  setAuthFailureHandler,
-} from "@/api/client";
+import { clearTokens, hasStoredTokens, persistTokens, setAuthFailureHandler } from "@/api/client";
 import * as devicesApi from "@/api/devices";
 import * as usersApi from "@/api/users";
 import * as marketsRepo from "@/db/repos/markets";
@@ -73,9 +68,7 @@ async function fetchAndCacheMarkets(): Promise<void> {
         nombre: m.mercado_nombre,
         clasificacion: m.mercado_clasificacion,
         direccion: m.direccion ?? "",
-        userRole: m.roles.includes("SUPERVISOR")
-          ? "SUPERVISOR"
-          : m.roles[0] ?? "OTRO",
+        userRole: m.roles.includes("SUPERVISOR") ? "SUPERVISOR" : (m.roles[0] ?? "OTRO"),
       })),
     );
   } catch {

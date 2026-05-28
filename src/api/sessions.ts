@@ -21,7 +21,9 @@ export interface SessionsListParams {
   page_size?: number;
 }
 
-export async function list(params: SessionsListParams = {}): Promise<PaginatedResponse<SesionListItem>> {
+export async function list(
+  params: SessionsListParams = {},
+): Promise<PaginatedResponse<SesionListItem>> {
   const res = await api.get<PaginatedResponse<SesionListItem>>("/sessions", { params });
   return res.data;
 }

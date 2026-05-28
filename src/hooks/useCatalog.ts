@@ -11,7 +11,7 @@ export interface CatalogProduct {
   productoNombre: string;
   productoCategoria: string;
   productoOrden: number;
-  presentaciones: Array<CatalogEntry & { currentPrice: LocalPrice | null }>;
+  presentaciones: (CatalogEntry & { currentPrice: LocalPrice | null })[];
 }
 
 interface UseCatalogResult {
@@ -22,10 +22,7 @@ interface UseCatalogResult {
   reload: () => Promise<void>;
 }
 
-function groupProducts(
-  entries: CatalogEntry[],
-  prices: LocalPrice[],
-): CatalogProduct[] {
+function groupProducts(entries: CatalogEntry[], prices: LocalPrice[]): CatalogProduct[] {
   const priceByKey = new Map<string, LocalPrice>();
   for (const p of prices) {
     priceByKey.set(`${p.productoId}-${p.presentacionId}`, p);
@@ -83,14 +80,8 @@ export function useCatalog(sessionId: number, refreshKey: unknown = 0): UseCatal
   }, [load, refreshKey]);
 
   const products = useMemo(() => groupProducts(entries, prices), [entries, prices]);
-  const totalCount = useMemo(
-    () => new Set(entries.map((e) => e.productoId)).size,
-    [entries],
-  );
-  const capturedCount = useMemo(
-    () => new Set(prices.map((p) => p.productoId)).size,
-    [prices],
-  );
+  const totalCount = useMemo(() => new Set(entries.map((e) => e.productoId)).size, [entries]);
+  const capturedCount = useMemo(() => new Set(prices.map((p) => p.productoId)).size, [prices]);
 
   return { loading, products, capturedCount, totalCount, reload: load };
 }

@@ -1,39 +1,66 @@
-import { Redirect, Stack } from "expo-router";
-import { Text, View } from "react-native";
+import { Redirect, Tabs } from "expo-router";
+import { View } from "react-native";
 
+import { AdaptiveTabBar } from "@/components/AdaptiveTabBar";
+import { AppHeader } from "@/components/AppHeader";
+import { ProfileSheet } from "@/components/ProfileSheet";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useAuthStore } from "@/stores/auth";
-import { colors } from "@/theme/colors";
 
 export default function AppLayout() {
   const status = useAuthStore((s) => s.status);
-  const softLocked = useAuthStore((s) => s.softLocked);
+  const { isTabletLandscape } = useResponsive();
 
   if (status === "unauthenticated") {
     return <Redirect href="/(auth)/login" />;
   }
 
   return (
-    <View className="flex-1">
-      {softLocked ? (
-        <View
-          className="px-4 py-2 items-center"
-          style={{ backgroundColor: colors.warning, paddingTop: 36 }}
-        >
-          <Text className="text-white text-xs font-medium">
-            Modo offline — algunas funciones limitadas
-          </Text>
-        </View>
-      ) : null}
-      <Stack screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="profile" />
-        <Stack.Screen name="start-session" />
-        <Stack.Screen name="capture/[sessionId]" />
-        <Stack.Screen name="complete/[sessionId]" options={{ presentation: "modal" }} />
-        <Stack.Screen name="history/index" />
-        <Stack.Screen name="history/[sessionId]" />
-        <Stack.Screen name="sync-status" />
-      </Stack>
+    <View className="flex-1 bg-white">
+      <Tabs
+        tabBar={(props) => <AdaptiveTabBar {...props} />}
+        screenOptions={{
+          header: () => <AppHeader />,
+          tabBarPosition: isTabletLandscape ? "left" : "bottom",
+          animation: "fade",
+        }}
+        initialRouteName="index"
+      >
+        <Tabs.Screen name="index" options={{ title: "Inicio" }} />
+        <Tabs.Screen name="history/index" options={{ title: "Historial" }} />
+        <Tabs.Screen name="sync-status" options={{ title: "Sync" }} />
+
+        {/* Rutas navegables pero NO en tab bar */}
+        <Tabs.Screen
+          name="start-session"
+          options={{
+            href: null,
+            header: () => <AppHeader showBack title="Iniciar toma" />,
+          }}
+        />
+        <Tabs.Screen
+          name="capture/[sessionId]"
+          options={{
+            href: null,
+            header: () => <AppHeader showBack title="Captura" />,
+          }}
+        />
+        <Tabs.Screen
+          name="complete/[sessionId]"
+          options={{
+            href: null,
+            header: () => <AppHeader showBack title="Completar toma" />,
+          }}
+        />
+        <Tabs.Screen
+          name="history/[sessionId]"
+          options={{
+            href: null,
+            header: () => <AppHeader showBack title="Detalle de sesión" />,
+          }}
+        />
+      </Tabs>
+      <ProfileSheet />
     </View>
   );
 }

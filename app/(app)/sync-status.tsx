@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
-import { useRouter, useFocusEffect } from "expo-router";
-import { ChevronLeft, RefreshCw, AlertTriangle, CheckCircle2, XCircle } from "lucide-react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, Text, View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { RefreshCw, AlertTriangle, CheckCircle2, XCircle, Cloud } from "lucide-react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PressableScale } from "@/components/ui/PressableScale";
 import { EmptyState } from "@/components/EmptyState";
 import * as pricesRepo from "@/db/repos/prices";
 import * as syncLogRepo from "@/db/repos/syncLog";
@@ -21,7 +21,6 @@ import type { SyncLogEntry } from "@/db/repos/syncLog";
 type Tab = "pending" | "errors" | "conflicts" | "history";
 
 export default function SyncStatusScreen() {
-  const router = useRouter();
   const { isOnline } = useNetwork();
   const [tab, setTab] = useState<Tab>("pending");
   const [pending, setPending] = useState<LocalPrice[]>([]);
@@ -81,63 +80,86 @@ export default function SyncStatusScreen() {
   const items =
     tab === "pending" ? pending : tab === "errors" ? errors : tab === "conflicts" ? conflicts : [];
 
-  return (
-    <SafeAreaView className="flex-1 bg-gris-fondo">
-      <View className="flex-row items-center px-3 py-2 bg-white border-b border-gray-200">
-        <Pressable onPress={() => router.back()} className="p-2">
-          <ChevronLeft size={20} color={colors.primary} />
-        </Pressable>
-        <Text className="text-base font-semibold text-texto-principal ml-1">
-          Estado de sincronización
-        </Text>
-      </View>
+  const tabsConfig = [
+    { id: "pending" as Tab, label: "Pendientes", count: pending.length },
+    { id: "errors" as Tab, label: "Errores", count: errors.length },
+    { id: "conflicts" as Tab, label: "Conflictos", count: conflicts.length },
+    { id: "history" as Tab, label: "Historial", count: logs.length },
+  ];
 
-      <View className="px-4 py-3 bg-white border-b border-gray-200">
-        <Text className="text-sm font-medium text-texto-principal">
-          {isOnline ? "En línea" : "Sin conexión"} · {pending.length + errors.length + conflicts.length} pendientes
-        </Text>
+  const totalPending = pending.length + errors.length + conflicts.length;
+
+  return (
+    <View className="flex-1 bg-white">
+      <View className="px-4 py-3 border-b border-gray-200">
+        <View className="flex-row items-center gap-2 mb-3">
+          <View
+            className={`w-9 h-9 rounded-xl items-center justify-center ${
+              isOnline ? "bg-success-50" : "bg-danger-50"
+            }`}
+          >
+            <Cloud size={18} color={isOnline ? colors.success : colors.danger} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm font-semibold text-texto-principal">
+              {isOnline ? "En línea" : "Sin conexión"}
+            </Text>
+            <Text className="text-xs text-texto-secundario">
+              {totalPending} pendiente{totalPending === 1 ? "" : "s"} de sincronizar
+            </Text>
+          </View>
+        </View>
         <Button
-          label={flushing ? "Sincronizando..." : "Forzar sincronización"}
+          label={flushing ? "Sincronizando…" : "Forzar sincronización"}
+          variant={isOnline ? "primary" : "secondary"}
           loading={flushing}
           disabled={flushing || !isOnline}
-          leftIcon={<RefreshCw size={16} color="#fff" />}
+          leftIcon={<RefreshCw size={16} color={isOnline ? "#fff" : colors.textoPrincipal} />}
           onPress={handleFlush}
         />
       </View>
 
-      <View className="flex-row bg-white border-b border-gray-200">
-        {(
-          [
-            { id: "pending" as Tab, label: "Pendientes", count: pending.length },
-            { id: "errors" as Tab, label: "Errores", count: errors.length },
-            { id: "conflicts" as Tab, label: "Conflictos", count: conflicts.length },
-            { id: "history" as Tab, label: "Historial", count: logs.length },
-          ] as const
-        ).map((t) => (
-          <Pressable
-            key={t.id}
-            onPress={() => setTab(t.id)}
-            className={`flex-1 items-center py-3 ${
-              tab === t.id ? "border-b-2 border-primary" : ""
-            }`}
-          >
-            <Text
-              className={`text-xs font-medium ${
-                tab === t.id ? "text-primary" : "text-texto-secundario"
-              }`}
+      <View className="flex-row gap-1.5 px-3 py-2.5 bg-white border-b border-gray-200">
+        {tabsConfig.map((t) => {
+          const active = tab === t.id;
+          return (
+            <PressableScale
+              key={t.id}
+              onPress={() => setTab(t.id)}
+              scaleTo={0.94}
+              className={`flex-1 items-center py-2 rounded-lg ${active ? "bg-gray-100" : ""}`}
             >
-              {t.label} ({t.count})
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                className={`text-xs font-semibold ${
+                  active ? "text-texto-principal" : "text-texto-secundario"
+                }`}
+              >
+                {t.label}
+              </Text>
+              <Text
+                className={`text-xs mt-0.5 ${
+                  active ? "text-texto-principal" : "text-texto-secundario"
+                }`}
+              >
+                {t.count}
+              </Text>
+            </PressableScale>
+          );
+        })}
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 12, gap: 8 }}>
         {tab !== "history" && items.length === 0 ? (
           <EmptyState
-            title={tab === "pending" ? "Sin pendientes" : tab === "errors" ? "Sin errores" : "Sin conflictos"}
+            title={
+              tab === "pending"
+                ? "Sin pendientes"
+                : tab === "errors"
+                  ? "Sin errores"
+                  : "Sin conflictos"
+            }
             description="Todo está sincronizado."
-            icon={<CheckCircle2 size={32} color={colors.success} />}
+            icon={<CheckCircle2 size={24} color={colors.success} />}
           />
         ) : null}
 
@@ -147,31 +169,33 @@ export default function SyncStatusScreen() {
               key={p.clientUuid}
               tone={tab === "errors" ? "danger" : tab === "conflicts" ? "warning" : "default"}
             >
-              <View className="flex-row items-start gap-2">
-                {tab === "errors" ? (
-                  <XCircle size={16} color={colors.danger} />
-                ) : tab === "conflicts" ? (
-                  <AlertTriangle size={16} color={colors.warning} />
-                ) : (
-                  <RefreshCw size={16} color={colors.warning} />
-                )}
+              <View className="flex-row items-start gap-3">
+                <View className="w-9 h-9 rounded-xl bg-white border border-gray-200 items-center justify-center">
+                  {tab === "errors" ? (
+                    <XCircle size={16} color={colors.danger} />
+                  ) : tab === "conflicts" ? (
+                    <AlertTriangle size={16} color={colors.warning} />
+                  ) : (
+                    <RefreshCw size={16} color={colors.warning} />
+                  )}
+                </View>
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-texto-principal">
-                    Producto #{p.productoId} — Presentación #{p.presentacionId}
+                    Producto #{p.productoId} · Pres. #{p.presentacionId}
                   </Text>
-                  <Text className="text-xs text-texto-secundario">
-                    Precio: {formatCurrency(p.precio)} · {formatRelative(p.clientTimestamp)}
+                  <Text className="text-xs text-texto-secundario mt-0.5">
+                    {formatCurrency(p.precio)} · {formatRelative(p.clientTimestamp)}
                   </Text>
                   {p.lastError ? (
-                    <Text className="text-xs text-mmqep-rojo mt-1" numberOfLines={2}>
+                    <Text className="text-xs text-danger-700 mt-1" numberOfLines={2}>
                       {p.lastError}
                     </Text>
                   ) : null}
                   {tab === "errors" ? (
-                    <View className="mt-2">
+                    <View className="mt-2.5 self-start">
                       <Button
                         label="Reintentar"
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         fullWidth={false}
                         onPress={() => handleRetry(p.clientUuid)}
@@ -185,7 +209,10 @@ export default function SyncStatusScreen() {
 
         {tab === "history" &&
           (logs.length === 0 ? (
-            <EmptyState title="Sin actividad" description="Aún no hay registros de sincronización." />
+            <EmptyState
+              title="Sin actividad"
+              description="Aún no hay registros de sincronización."
+            />
           ) : (
             logs.map((l) => (
               <Card key={l.id}>
@@ -195,13 +222,15 @@ export default function SyncStatusScreen() {
                   ) : (
                     <XCircle size={14} color={colors.danger} />
                   )}
-                  <Text className="text-sm font-medium text-texto-principal">{l.action}</Text>
-                  <Text className="text-xs text-texto-secundario ml-auto">
+                  <Text className="text-sm font-medium text-texto-principal flex-1">
+                    {l.action}
+                  </Text>
+                  <Text className="text-xs text-texto-secundario">
                     {formatRelative(l.timestamp)}
                   </Text>
                 </View>
                 {l.details ? (
-                  <Text className="text-xs text-texto-secundario mt-1" numberOfLines={2}>
+                  <Text className="text-xs text-texto-secundario mt-1.5" numberOfLines={2}>
                     {JSON.stringify(l.details)}
                   </Text>
                 ) : null}
@@ -209,6 +238,6 @@ export default function SyncStatusScreen() {
             ))
           ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

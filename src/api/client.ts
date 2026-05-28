@@ -99,10 +99,14 @@ async function doRefresh(): Promise<string | null> {
       token_type: "bearer";
       scope: "mobile" | "admin";
       expires_in: number;
-    }>(`${BASE_URL}/auth/refresh`, { refresh_token: refresh }, {
-      timeout: TIMEOUT,
-      headers: { "Content-Type": "application/json" },
-    });
+    }>(
+      `${BASE_URL}/auth/refresh`,
+      { refresh_token: refresh },
+      {
+        timeout: TIMEOUT,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
     await persistAccessToken(res.data.access_token);
     return res.data.access_token;
   } catch {

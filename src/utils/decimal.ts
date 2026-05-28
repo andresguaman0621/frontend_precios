@@ -27,7 +27,7 @@ export function roundTo(value: number, decimals: number): number {
   return Math.round(value * factor) / factor;
 }
 
-export function average(values: Array<number | null>): number | null {
+export function average(values: (number | null)[]): number | null {
   const valid = values.filter((v): v is number => v != null && Number.isFinite(v));
   if (valid.length === 0) return null;
   const sum = valid.reduce((acc, v) => acc + v, 0);

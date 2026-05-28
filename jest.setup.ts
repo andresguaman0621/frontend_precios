@@ -8,7 +8,7 @@ jest.mock("expo-secure-store", () => ({
 }));
 
 jest.mock("@react-native-async-storage/async-storage", () =>
-  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
 
 jest.mock("expo-haptics", () => ({
@@ -43,9 +43,7 @@ jest.mock("expo-notifications", () => ({
 }));
 
 jest.mock("@react-native-community/netinfo", () => ({
-  fetch: jest.fn(() =>
-    Promise.resolve({ isConnected: true, isInternetReachable: true })
-  ),
+  fetch: jest.fn(() => Promise.resolve({ isConnected: true, isInternetReachable: true })),
   addEventListener: jest.fn(() => jest.fn()),
   useNetInfo: jest.fn(() => ({ isConnected: true, isInternetReachable: true })),
 }));

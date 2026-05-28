@@ -22,7 +22,7 @@ const MAX_ATTEMPTS = 5;
 class _SyncManager {
   private isRunning = false;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  private listeners: Array<() => void> = [];
+  private listeners: (() => void)[] = [];
 
   subscribe(listener: () => void): () => void {
     this.listeners.push(listener);
@@ -145,10 +145,7 @@ class _SyncManager {
             break;
           case "conflict": {
             await pricesRepo.setSyncState([r.client_uuid], "conflict");
-            await pricesRepo.setLastError(
-              r.client_uuid,
-              JSON.stringify(r.variacion_info ?? {}),
-            );
+            await pricesRepo.setLastError(r.client_uuid, JSON.stringify(r.variacion_info ?? {}));
             const local = await pricesRepo.getByClientUuid(r.client_uuid);
             const entries = await catalogRepo.getBySession(sessionId);
             const match = entries.find(

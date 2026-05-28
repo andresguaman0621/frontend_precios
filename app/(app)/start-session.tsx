@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { isAxiosError } from "axios";
-import { ChevronLeft, MapPin, CheckCircle2, AlertTriangle, XCircle } from "lucide-react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { MapPin, CheckCircle2, AlertTriangle, XCircle, Store } from "lucide-react-native";
 
 import * as sessionsApi from "@/api/sessions";
 import { queryKeys } from "@/api/queries";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { PressableScale } from "@/components/ui/PressableScale";
 import * as catalogRepo from "@/db/repos/catalog";
 import * as marketsRepo from "@/db/repos/markets";
 import * as sessionsRepo from "@/db/repos/sessions";
@@ -30,9 +30,8 @@ export default function StartSessionScreen() {
 
   const supervisorMarketIds = useMemo(
     () =>
-      user?.asignaciones
-        .filter((a) => a.rol_codigo === "SUPERVISOR")
-        .map((a) => a.mercado_id) ?? [],
+      user?.asignaciones.filter((a) => a.rol_codigo === "SUPERVISOR").map((a) => a.mercado_id) ??
+      [],
     [user],
   );
 
@@ -189,21 +188,20 @@ export default function StartSessionScreen() {
   const gpsStatusUI = () => {
     if (gps.status === "idle") {
       return (
-        <Pressable
+        <Button
+          label="Permitir ubicación"
+          variant="secondary"
+          leftIcon={<MapPin size={16} color={colors.textoPrincipal} />}
           onPress={gps.request}
-          className="flex-row items-center gap-2 bg-primary rounded-lg px-4 py-3"
-        >
-          <MapPin size={18} color="#fff" />
-          <Text className="text-white font-semibold">Permitir ubicación</Text>
-        </Pressable>
+        />
       );
     }
     if (gps.status === "requesting") {
       return (
         <View className="flex-row items-center gap-2">
           <ActivityIndicator color={colors.primary} />
-          <Text className="text-texto-secundario">
-            Obteniendo GPS... {gps.accuracy ? `(${gps.accuracy.toFixed(0)}m)` : ""}
+          <Text className="text-sm text-texto-secundario">
+            Obteniendo GPS… {gps.accuracy ? `(${gps.accuracy.toFixed(0)}m)` : ""}
           </Text>
         </View>
       );
@@ -212,8 +210,8 @@ export default function StartSessionScreen() {
       return (
         <View className="flex-row items-center gap-2">
           <CheckCircle2 size={18} color={colors.success} />
-          <Text className="text-success-700 font-medium">
-            Ubicación capturada ({gps.accuracy?.toFixed(0)}m)
+          <Text className="text-sm text-success-700 font-medium">
+            Ubicación capturada · {gps.accuracy?.toFixed(0)}m
           </Text>
         </View>
       );
@@ -222,8 +220,8 @@ export default function StartSessionScreen() {
       return (
         <View className="flex-row items-center gap-2">
           <AlertTriangle size={18} color={colors.warning} />
-          <Text className="text-warning-700 font-medium">
-            Ubicación aproximada ({gps.accuracy?.toFixed(0)}m)
+          <Text className="text-sm text-warning-700 font-medium">
+            Aproximada · {gps.accuracy?.toFixed(0)}m
           </Text>
         </View>
       );
@@ -231,7 +229,7 @@ export default function StartSessionScreen() {
     return (
       <View className="flex-row items-center gap-2">
         <XCircle size={18} color={colors.danger} />
-        <Text className="text-mmqep-rojo font-medium">No se pudo obtener ubicación</Text>
+        <Text className="text-sm text-danger-700 font-medium">No se pudo obtener ubicación</Text>
       </View>
     );
   };
@@ -244,28 +242,33 @@ export default function StartSessionScreen() {
       gps.status === "error" ||
       gps.status === "denied");
 
-  return (
-    <SafeAreaView className="flex-1 bg-gris-fondo">
-      <View className="flex-row items-center px-4 py-2 bg-white border-b border-gray-200">
-        <Pressable
-          onPress={() => router.back()}
-          className="flex-row items-center gap-1 py-2 pr-3"
-        >
-          <ChevronLeft size={20} color={colors.primary} />
-          <Text className="text-primary font-medium">Atrás</Text>
-        </Pressable>
-        <Text className="text-base font-semibold text-texto-principal ml-2">
-          Iniciar nueva toma
-        </Text>
-      </View>
+  const handleSubmit = () => {
+    if (gps.status === "denied" || gps.status === "error") {
+      Alert.alert("Sin GPS", "No se pudo obtener ubicación. ¿Continuar sin GPS?", [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Continuar", onPress: startSession },
+      ]);
+      return;
+    }
+    if (gps.status === "low_accuracy") {
+      Alert.alert("Ubicación aproximada", `Accuracy: ${gps.accuracy?.toFixed(0)}m. ¿Continuar?`, [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Continuar", onPress: startSession },
+      ]);
+      return;
+    }
+    startSession();
+  };
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 120 }}>
+  return (
+    <View className="flex-1 bg-white">
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120, gap: 14 }}>
         {markets.length === 0 ? (
           <Card>
             <Text className="text-base font-semibold text-texto-principal">
               Sin mercados asignados
             </Text>
-            <Text className="text-sm text-texto-secundario mt-1">
+            <Text className="text-sm text-texto-secundario mt-1.5">
               Solicita a un administrador que te asigne al menos un mercado como supervisor.
             </Text>
           </Card>
@@ -273,85 +276,96 @@ export default function StartSessionScreen() {
 
         {markets.length > 1 ? (
           <View className="gap-2">
-            <Text className="text-sm font-medium text-texto-principal">Selecciona mercado</Text>
-            {markets.map((m) => (
-              <Pressable
-                key={m.id}
-                onPress={() => setSelectedMarketId(m.id)}
-                className={`p-4 bg-white rounded-xl border ${
-                  selectedMarketId === m.id ? "border-primary" : "border-gray-200"
-                }`}
-              >
-                <Text className="text-base font-semibold text-texto-principal">{m.nombre}</Text>
-                <Text className="text-xs text-texto-secundario">{m.direccion}</Text>
-              </Pressable>
-            ))}
+            <Text className="text-xs text-texto-secundario font-medium uppercase tracking-wide">
+              Selecciona mercado
+            </Text>
+            {markets.map((m) => {
+              const active = selectedMarketId === m.id;
+              return (
+                <PressableScale
+                  key={m.id}
+                  onPress={() => setSelectedMarketId(m.id)}
+                  className={`p-4 bg-white rounded-2xl border ${
+                    active ? "border-primary" : "border-gray-200"
+                  }`}
+                >
+                  <View className="flex-row items-center gap-3">
+                    <View
+                      className={`w-10 h-10 rounded-xl items-center justify-center ${
+                        active ? "bg-primary-50" : "bg-gray-50"
+                      }`}
+                    >
+                      <Store size={18} color={active ? colors.primary : colors.textoSecundario} />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-base font-semibold text-texto-principal">
+                        {m.nombre}
+                      </Text>
+                      <Text className="text-xs text-texto-secundario" numberOfLines={1}>
+                        {m.direccion}
+                      </Text>
+                    </View>
+                  </View>
+                </PressableScale>
+              );
+            })}
           </View>
         ) : null}
 
         {selectedMarket ? (
           <Card>
-            <Text className="text-base font-semibold text-texto-principal">
+            <Text className="text-xs text-texto-secundario font-medium uppercase tracking-wide mb-2">
+              Mercado seleccionado
+            </Text>
+            <Text className="text-lg font-semibold text-texto-principal">
               {selectedMarket.nombre}
             </Text>
-            <Text className="text-xs text-texto-secundario">{selectedMarket.direccion}</Text>
-            <Text className="text-xs text-texto-secundario mt-1">
+            <Text className="text-xs text-texto-secundario mt-0.5">{selectedMarket.direccion}</Text>
+            <Text className="text-xs text-texto-secundario mt-0.5">
               Clasificación: {selectedMarket.clasificacion}
             </Text>
+            <View className="h-px bg-gray-200 my-3" />
             {preflightLoading ? (
-              <ActivityIndicator color={colors.primary} className="mt-3" />
+              <ActivityIndicator color={colors.primary} />
             ) : preflight ? (
-              <Text
-                className={`text-sm mt-3 ${preflight.puede ? "text-texto-principal" : "text-mmqep-rojo"}`}
-              >
-                {preflight.mensaje} ({preflight.tomasEnSemana}/{preflight.maxTomas} esta semana)
-              </Text>
+              <View className="flex-row items-center justify-between">
+                <Text
+                  className={`text-sm flex-1 ${
+                    preflight.puede ? "text-texto-principal" : "text-danger-700"
+                  }`}
+                >
+                  {preflight.mensaje}
+                </Text>
+                <View className="px-2.5 py-1 rounded-full bg-gray-50 border border-gray-200">
+                  <Text className="text-xs font-medium text-texto-principal">
+                    {preflight.tomasEnSemana}/{preflight.maxTomas}
+                  </Text>
+                </View>
+              </View>
             ) : null}
           </Card>
         ) : null}
 
         {selectedMarket ? (
           <Card>
-            <Text className="text-sm font-medium text-texto-principal mb-3">Ubicación GPS</Text>
+            <Text className="text-xs text-texto-secundario font-medium uppercase tracking-wide mb-3">
+              Ubicación GPS
+            </Text>
             {gpsStatusUI()}
           </Card>
         ) : null}
       </ScrollView>
 
       {selectedMarket ? (
-        <View className="px-4 py-4 bg-white border-t border-gray-200">
+        <View className="px-4 py-3 bg-white border-t border-gray-200">
           <Button
             label="Iniciar toma"
             loading={submitting}
             disabled={!canStart || submitting}
-            onPress={() => {
-              if (gps.status === "denied" || gps.status === "error") {
-                Alert.alert(
-                  "Sin GPS",
-                  "No se pudo obtener ubicación. ¿Continuar sin GPS?",
-                  [
-                    { text: "Cancelar", style: "cancel" },
-                    { text: "Continuar", onPress: startSession },
-                  ],
-                );
-                return;
-              }
-              if (gps.status === "low_accuracy") {
-                Alert.alert(
-                  "Ubicación aproximada",
-                  `Accuracy: ${gps.accuracy?.toFixed(0)}m. ¿Continuar?`,
-                  [
-                    { text: "Cancelar", style: "cancel" },
-                    { text: "Continuar", onPress: startSession },
-                  ],
-                );
-                return;
-              }
-              startSession();
-            }}
+            onPress={handleSubmit}
           />
         </View>
       ) : null}
-    </SafeAreaView>
+    </View>
   );
 }

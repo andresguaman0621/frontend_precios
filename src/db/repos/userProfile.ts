@@ -34,9 +34,7 @@ function mapRow(row: UserProfileRow): UserProfile {
 
 export async function get(): Promise<UserProfile | null> {
   const db = await getDatabase();
-  const row = await db.getFirstAsync<UserProfileRow>(
-    `SELECT * FROM user_profile LIMIT 1;`,
-  );
+  const row = await db.getFirstAsync<UserProfileRow>(`SELECT * FROM user_profile LIMIT 1;`);
   return row ? mapRow(row) : null;
 }
 

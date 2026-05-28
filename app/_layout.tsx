@@ -11,6 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { ToastHost } from "@/components/ui/Toast";
 import { ensureDatabase } from "@/db/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDeviceOrientationLock } from "@/hooks/useDeviceOrientationLock";
 import { useNetworkWatcher } from "@/hooks/useNetwork";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { SyncManager } from "@/sync/SyncManager";
@@ -33,8 +34,9 @@ function AppShell() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { hydrate } = useAuth();
+  useDeviceOrientationLock();
   useNetworkWatcher(() => {
-    void SyncManager.maybeFlush();
+    SyncManager.maybeFlush().catch(() => {});
   });
   usePushNotifications();
 
@@ -60,7 +62,10 @@ function AppShell() {
 
   if (error) {
     return (
-      <View className="flex-1 items-center justify-center px-6" style={{ backgroundColor: colors.danger }}>
+      <View
+        className="flex-1 items-center justify-center px-6"
+        style={{ backgroundColor: colors.danger }}
+      >
         <Text className="text-white text-lg font-bold mb-2">Error de inicialización</Text>
         <Text className="text-white text-sm text-center">{error}</Text>
       </View>
@@ -69,7 +74,10 @@ function AppShell() {
 
   if (!ready) {
     return (
-      <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.primary }}>
+      <View
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: colors.primary }}
+      >
         <ActivityIndicator size="large" color={colors.white} />
       </View>
     );

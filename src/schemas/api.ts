@@ -282,9 +282,9 @@ export interface DeviceOut {
 // ===== Paginación =====
 
 export interface PaginatedResponse<T> {
-  data: T[];
+  items: T[];
   total: number;
   page: number;
   page_size: number;
-  pages: number;
+  total_pages: number;
 }

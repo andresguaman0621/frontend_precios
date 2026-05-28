@@ -8,8 +8,10 @@ import { isAxiosError } from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/hooks/useAuth";
+import { useResponsive } from "@/hooks/useResponsive";
 import { loginSchema, type LoginFormValues } from "@/schemas/auth";
 import { hasSupervisorRole, useAuthStore } from "@/stores/auth";
 import { toast } from "@/stores/toast";
@@ -19,6 +21,7 @@ const LAST_USERNAME_KEY = "prefs.lastUsername";
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
+  const { isTablet } = useResponsive();
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -77,62 +80,74 @@ export default function LoginScreen() {
         className="flex-1"
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, padding: 24, justifyContent: "center" }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 20,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
           keyboardShouldPersistTaps="handled"
         >
-          <View className="items-center mb-12">
-            <Text className="text-4xl font-bold text-primary">MMQEP</Text>
-            <Text className="text-base text-texto-secundario mt-1">Toma de Precios</Text>
-          </View>
+          <View style={{ width: "100%", maxWidth: isTablet ? 420 : 480 }} className="gap-6">
+            <View className="items-center">
+              <View className="w-16 h-16 rounded-2xl bg-primary items-center justify-center mb-4">
+                <Text className="text-2xl font-bold text-white">M</Text>
+              </View>
+              <Text className="text-2xl font-semibold text-texto-principal">MMQEP</Text>
+              <Text className="text-sm text-texto-secundario mt-1">Toma de Precios</Text>
+            </View>
 
-          <View className="gap-4">
-            <Controller
-              control={control}
-              name="username"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="Usuario"
-                  placeholder="usuario.apellido"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="next"
-                  error={errors.username?.message}
+            <Card>
+              <View className="gap-4">
+                <Controller
+                  control={control}
+                  name="username"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Usuario"
+                      placeholder="usuario.apellido"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="next"
+                      error={errors.username?.message}
+                    />
+                  )}
                 />
-              )}
-            />
 
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <Input
-                  label="Contraseña"
-                  placeholder="••••••••"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secure
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  onSubmitEditing={handleSubmit(onSubmit)}
-                  error={errors.password?.message}
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <Input
+                      label="Contraseña"
+                      placeholder="••••••••"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      secure
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="done"
+                      onSubmitEditing={handleSubmit(onSubmit)}
+                      error={errors.password?.message}
+                    />
+                  )}
                 />
-              )}
-            />
 
-            <Button
-              label="Iniciar sesión"
-              loading={submitting}
-              disabled={!isValid || submitting}
-              onPress={handleSubmit(onSubmit)}
-            />
+                <Button
+                  label="Iniciar sesión"
+                  loading={submitting}
+                  disabled={!isValid || submitting}
+                  onPress={handleSubmit(onSubmit)}
+                />
+              </View>
+            </Card>
 
             <Text
-              className="text-center text-xs text-texto-secundario mt-2"
+              className="text-center text-xs text-texto-secundario"
               onPress={() =>
                 toast.info("Contacta a tu administrador para recuperar tu contraseña.")
               }
